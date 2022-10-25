@@ -371,8 +371,8 @@ class Session(AbstractContextManager):
         Returns:
             A list of suggested strings to complete the code.
         """
-        prefix = code[:cursor_pos]
-        words = prefix.split(" ")
+        prefix = code[:cursor_pos]  # current line of code as a string?
+        words = prefix.split(" ")   # current line w/ words parsed into list
         last_word = words[-1]
         last_char = prefix[-1]
         _logger.debug('code="%s" prefix="%s" last_word="%s"', code, prefix, last_word)
@@ -400,6 +400,44 @@ class Session(AbstractContextManager):
             else:
                 allnames = []
                 _logger.debug("cannot find auto-complete interface")
+
+        # does this autocomplete need to be added? They mentioned specifically for attributes, not variables...
+        # nvm just ignore this stuff lol
+        # elif "DISP" in prefix:
+        #     # display entity list autocomplete from existing scope of variables
+        #     # also checking for if ATTR then list possible attributes from VarStruct thing
+        #     # symtable (dict) - maps kestrel var names to associated Kestrel internal data structure (VarStruct)
+        #     allnames = [
+        #         v for v in self.get_variable_names() if v.startswith(prefix)
+        #     ]
+        # elif "ATTR" in prefix:
+        #     #check if variable exists in session, then auto-complete all attributes the variable has
+        #     if last_word in self.get_variable_names()
+        #         allnames = [
+        #             get_variable(last_word)
+        #         ]
+        #         _logger.debug(f"auto-complete from variable attributes {last_word}: {allnames}")
+        #     else:
+        #         allnames = []
+        #         _logger.debug("cannot find auto-complete variable")
+        # 2 scenarios: existing kestrel variable (1) and not yet existing (2) [in session]
+        # don't forget to include syntax error cases
+        # CASE 1:   DISP <var>  ATTR ___autocomplete_here___
+            # lists all ATTR if no specs
+            # kestrel cache to find existing variables VarStruct
+                # https://github.com/opencybersecurityalliance/kestrel-lang/blob/develop/src/kestrel/symboltable.py#L6
+            # data bucket kestrel for data samples; kestrel main repository tests folder
+            # language specification -> kestrel command -> save (dumps kestrel var data into a local file)
+            # kestrel uses parser called "Lark" (kestrel-lang/kestrel.lark) https://github.com/lark-parser/lark
+        # CASE 2:   WHERE [process:___autocomplete_here__]
+            # context of mapping bt stix into a yaml/json file to load into a function u create (is that for testing)
+            # stix for patterning language (e.g. stix process object); cyber-observable objects, SCOs (entities kestrel uses)
+                # https://docs.oasis-open.org/cti/stix/v2.1/os/stix-v2.1-os.html#_mlbmudhl16lr
+        # other notes i forget where they come in:
+            # kestrel analytics template avail (partif file??)
+            # Where would I put a parsing function for the STIX SCO documentation -> autocomplete? Did I miss this?
+                # rmber something about https://firepit.readthedocs.io/en/stable/readme.html being mentioned
+                # Start with CASE 1 regardless...
         else:
             _logger.debug("standard auto-complete")
 
@@ -438,7 +476,21 @@ class Session(AbstractContextManager):
                         tmp.extend(get_entity_types())
                     elif token.startswith("STIXPATH"):
                         # TODO: figure out the varname and get its attrs
-                        continue
+                        # how to figure out what the variable name is??
+                            # Can we assume that words[1] would be the var in this case?
+                            # if words[1] in varnames:
+                                # var_name = self.symtable[words[1]]
+                                # tmp.extend(get_entity_id_attribute(var_name))
+                            # Check line for most recently mentioned variable
+                            # do i need a separate function to do this?
+                            # loop through? string if needed? idk
+                        if words[-2] in varnames:
+                            var_name = self.symtable[words[-2]]
+                            tmp.extend(get_entity_id_attribute(var_name))
+                            # harded coded for DISP var ATTR __ case. (FOR TESTING)
+                            # the testing output is giving me "new" and "name"
+                            # for the autofill options; should only show "name"
+                            # why is "new" in this list??
                     elif token.startswith("STIXPATTERNBODY"):
                         # TODO: figure out how to complete STIX patterns
                         continue
