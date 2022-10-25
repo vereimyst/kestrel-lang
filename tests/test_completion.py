@@ -89,6 +89,20 @@ def a_session():
             ["_", "conns", "file://", "http://", "https://", "stixshifter://"],
         ),
         ("urls = get url where ", []),
+        ("DISP conns ATTR d", {"dst_port", "dst_ref.id", "dst_ref.value"}),
+        ("DISP conns ATTR s", {"src_port", "src_ref.id", "src_ref.value"}),
+        ("DISP conns ATTR ", {
+            "dst_port",
+            "dst_ref.id",
+            "dst_ref.value",
+            "end",
+            "id",
+            "protocols",
+            "src_port",
+            "src_ref.id",
+            "src_ref.value",
+            "start",
+        }),
     ],
 )
 def test_do_complete_after_get(a_session, code, expected):
