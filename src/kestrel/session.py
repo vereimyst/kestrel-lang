@@ -484,6 +484,7 @@ class Session(AbstractContextManager):
                             # Check line for most recently mentioned variable
                             # do i need a separate function to do this?
                             # loop through? string if needed? idk
+                        _logger.debug(f"BEFORE attribute autocompletion: {tmp}")
                         if words[-2] in varnames:
                             var_name = self.symtable[words[-2]]
                             tmp.extend(get_entity_id_attribute(var_name))
@@ -491,6 +492,8 @@ class Session(AbstractContextManager):
                             # the testing output is giving me "new" and "name"
                             # for the autofill options; should only show "name"
                             # why is "new" in this list??
+                            # why does autocompleting after 'ATTR ' result in an error??
+                        _logger.debug(f"AFTER attribute autocompletion: {tmp}")
                     elif token.startswith("STIXPATTERNBODY"):
                         # TODO: figure out how to complete STIX patterns
                         continue
