@@ -5,6 +5,8 @@ import pytest
 import pathlib
 import shutil
 import tempfile
+import kestrel
+import kestrel_datasource_stixshifter
 import pandas as pd
 
 from kestrel.session import Session
@@ -54,11 +56,11 @@ def test_session_1(fake_bundle_file):
         )
         conns = get_df(session, "conns")
         assert len(conns.index) == 100
-        execute(session, "sort conns by network-traffic:dst_port asc")
+        execute(session, "sort conns by dst_port asc")
         s = get_df(session, "_")
         assert len(s.index) == 100
         assert s.iloc[0]["dst_port"] == 22
-        execute(session, "group conns by network-traffic:dst_port")
+        execute(session, "group conns by dst_port")
         s = get_df(session, "_")
         assert len(s.index) == 5
         port_3128 = s[(s["dst_port"] == 3128)]
@@ -163,7 +165,7 @@ def test_generated_pattern_match(fake_bundle_file, fake_bundle_3):
 
 
 def test_disp_column_order(fake_bundle_file, caplog):
-    caplog.set_level(logging.DEBUG)
+    #caplog.set_level(logging.DEBUG)
     with Session(debug_mode=True) as session:
         execute(
             session,
@@ -172,16 +174,11 @@ def test_disp_column_order(fake_bundle_file, caplog):
             where [network-traffic:dst_port < 10000]""",
         )
         # SCO type in attr names should be optional
-        recs = session.execute(f"disp conns attr network-traffic:src_port, dst_port")[0]
+        recs = session.execute(f"disp conns attr src_port, dst_port")[0]
         conns = recs.dataframe
         print(conns.head())
         cols = conns.columns.to_list()
         assert cols.index("src_port") < cols.index("dst_port")
-        with pytest.raises(Exception):
-            session.execute(
-                f"disp conns attr process:src_port, dst_port"
-            )  # Wrong SCO type
-
 
 def test_get_set_variable(fake_bundle_file):
     with Session() as session:
@@ -321,3 +318,19 @@ grouped = group conns by src_ref.value, dst_ref.value with count(src_ref.value) 
         out = session.execute("DISP grouped ATTR src_ref.value, dst_ref.value, count")
         df = out[0].dataframe
         assert list(df.columns) == ["src_ref.value", "dst_ref.value", "count"]
+
+
+def test_env_var_resolve(tmp_path):
+    os.chdir(tmp_path)
+    config_name = "abc.yaml"
+    with open(config_name, "w") as config:
+        config.write(r"""
+language:
+  default_variable: "_"
+""")
+    os.environ[kestrel.config.CONFIG_PATH_ENV_VAR] = config_name
+    os.environ[kestrel_datasource_stixshifter.config.PROFILE_PATH_ENV_VAR] = config_name
+    s = Session()
+    full_path = os.path.join(os.getcwd(), config_name)
+    assert os.environ[kestrel.config.CONFIG_PATH_ENV_VAR] == full_path 
+    assert os.environ[kestrel_datasource_stixshifter.config.PROFILE_PATH_ENV_VAR] == full_path

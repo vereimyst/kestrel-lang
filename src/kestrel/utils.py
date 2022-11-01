@@ -4,6 +4,10 @@ import uuid
 import collections.abc
 
 
+def unescape_quoted_string(s):
+    return s[1:-1].encode("utf-8").decode("unicode_escape")
+
+
 def lowered_str_list(xs):
     return [x.lower() for x in xs if isinstance(x, str)]
 
@@ -54,6 +58,18 @@ def mkdtemp():
     p = pathlib.Path(ps)
     p.mkdir(parents=True, exist_ok=True)
     return p
+
+
+def resolve_path_in_kestrel_env_var():
+    for key in os.environ:
+        if key.startswith("KESTREL") or key.startswith("kestrel"):
+            path = os.environ[key]
+            if os.path.exists(path):
+                os.environ[key] = resolve_path(path)
+
+
+def resolve_path(path):
+    return os.path.abspath(os.path.expanduser(os.path.expandvars(path)))
 
 
 class set_current_working_directory:

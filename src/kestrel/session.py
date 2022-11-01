@@ -65,8 +65,7 @@ from kestrel.exceptions import (
     InvalidStixPattern,
     DebugCacheLinkOccupied,
 )
-from kestrel.syntax.parser import get_all_input_var_names
-from kestrel.syntax.parser import parse
+from kestrel.syntax.parser import parse_kestrel
 from kestrel.syntax.utils import (
     get_entity_types,
     get_keywords,
@@ -75,13 +74,14 @@ from kestrel.syntax.utils import (
     AGG_FUNCS,
     TRANSFORMS,
 )
-from kestrel.semantics import *
+from kestrel.semantics.processor import semantics_processing
 from kestrel.codegen import commands
 from kestrel.codegen.display import DisplayBlockSummary
 from kestrel.codegen.summary import gen_variable_summary
+from kestrel.symboltable.symtable import SymbolTable
 from firepit import get_storage
 from firepit.exceptions import StixPatternError
-from kestrel.utils import set_current_working_directory
+from kestrel.utils import set_current_working_directory, resolve_path_in_kestrel_env_var
 from kestrel.config import load_config
 from kestrel.datasource import DataSourceManager
 from kestrel.analytics import AnalyticsManager
@@ -177,6 +177,8 @@ class Session(AbstractContextManager):
             f"Establish session with session_id: {session_id}, runtime_dir: {runtime_dir}, store_path:{store_path}, debug_mode:{debug_mode}"
         )
 
+        resolve_path_in_kestrel_env_var()
+
         self.config = load_config()
 
         if session_id:
@@ -242,7 +244,7 @@ class Session(AbstractContextManager):
         # linking variables in syntax with internal data structure
         # handling fallback_var for the most recently accessed var
         # {"var": VarStruct}
-        self.symtable = {}
+        self.symtable = SymbolTable()
 
         self.data_source_manager = DataSourceManager(self.config)
         self.analytics_manager = AnalyticsManager(self.config)
@@ -273,6 +275,7 @@ class Session(AbstractContextManager):
             A list of outputs that each of them is the output for each
             statement in the inputted code block.
         """
+        _logger.debug("potato")
         ast = self.parse(codeblock)
         return self._execute_ast(ast)
 
@@ -292,7 +295,7 @@ class Session(AbstractContextManager):
             tree* for one Kestrel statement in the inputted code block.
         """
         try:
-            ast = parse(
+            ast = parse_kestrel(
                 codeblock,
                 self.config["language"]["default_variable"],
                 self.config["language"]["default_sort_order"],
@@ -440,6 +443,7 @@ class Session(AbstractContextManager):
                 # Start with CASE 1 regardless...
         else:
             _logger.debug("standard auto-complete")
+            _logger.debug("6A123456")
 
             try:
                 stmt = self.parse(prefix)
@@ -455,6 +459,7 @@ class Session(AbstractContextManager):
 
                 # If it parses successfully, add something so it will fail
                 self.parse(prefix + " @autocompletions@")
+                # self.parse(prefix + "@autocompletions@")
             except KestrelSyntaxError as e:
                 _logger.debug("exception: %s", e)
                 varnames = self.get_variable_names()
@@ -465,16 +470,17 @@ class Session(AbstractContextManager):
                     _logger.debug("token: %s", token)
                     if token == "VARIABLE":
                         tmp.extend(varnames)
-                    elif token == "DATASRC":
+                    elif token == "DATASRC_SIMPLE":
                         schemes = self.data_source_manager.schemes()
                         tmp.extend([f"{scheme}://" for scheme in schemes])
-                        tmp.extend(varnames)
-                    elif token == "ANALYTICS":
+                    elif token == "DATASRC_ESCAPED":
+                        continue
+                    elif token == "ANALYTICS_SIMPLE":
                         schemes = self.analytics_manager.schemes()
                         tmp.extend([f"{scheme}://" for scheme in schemes])
                     elif token == "ENTITY_TYPE":
                         tmp.extend(get_entity_types())
-                    elif token.startswith("STIXPATH"):
+                    elif token == "ATTRIBUTES":
                         # TODO: figure out the varname and get its attrs
                         # how to figure out what the variable name is??
                             # Can we assume that words[1] would be the var in this case?
@@ -484,16 +490,16 @@ class Session(AbstractContextManager):
                             # Check line for most recently mentioned variable
                             # do i need a separate function to do this?
                             # loop through? string if needed? idk
-                        _logger.debug(f"BEFORE attribute autocompletion: {tmp}")
+                        _logger.debug("BEFORE attribute autocompletion: %s", tmp)
                         if words[-2] in varnames:
                             var_name = self.symtable[words[-2]]
                             tmp.extend(get_entity_id_attribute(var_name))
                             # harded coded for DISP var ATTR __ case. (FOR TESTING)
                             # the testing output is giving me "new" and "name"
                             # for the autofill options; should only show "name"
-                            # why is "new" in this list??
+                            # why is "new" in this list?? maybe something remaining from prev. autocompletion?
                             # why does autocompleting after 'ATTR ' result in an error??
-                        _logger.debug(f"AFTER attribute autocompletion: {tmp}")
+                        _logger.debug("AFTER attribute autocompletion: %s", tmp)
                     elif token.startswith("STIXPATTERNBODY"):
                         # TODO: figure out how to complete STIX patterns
                         continue
@@ -567,27 +573,14 @@ class Session(AbstractContextManager):
         for stmt in ast:
 
             try:
-
-                # pre-processing: semantics check and completion
-                #   - ensure all parsed elements not empty
-                #   - check existance of argument variables
-                #   - complete data source if omitted by user
-                #   - complete input context
-                check_elements_not_empty(stmt)
-                for input_var_name in get_all_input_var_names(stmt):
-                    check_var_exists(input_var_name, self.symtable)
-                if stmt["command"] == "get":
-                    recognize_var_source(stmt, self.symtable)
-                    complete_data_source(
-                        stmt, self.data_source_manager.queried_data_sources[-1]
-                    )
-                if stmt["command"] == "load" or stmt["command"] == "save":
-                    stmt["path"] = pathlib.Path(stmt["path"]).expanduser().resolve()
-                if stmt["command"] == "find":
-                    check_semantics_on_find(stmt, self.symtable[stmt["input"]].type)
-                if "attrs" in stmt:
-                    var_struct = self.symtable[stmt["input"]]
-                    stmt["attrs"] = normalize_attrs(stmt, var_struct)
+                # semantic checking and unfolding
+                semantics_processing(
+                    stmt,
+                    self.symtable,
+                    self.store,
+                    self.data_source_manager,
+                    self.config,
+                )
 
                 # code generation and execution
                 execute_cmd = getattr(commands, stmt["command"])
