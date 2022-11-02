@@ -85,6 +85,7 @@ from kestrel.utils import set_current_working_directory, resolve_path_in_kestrel
 from kestrel.config import load_config
 from kestrel.datasource import DataSourceManager
 from kestrel.analytics import AnalyticsManager
+from kestrel.codegen.relations import get_entity_id_attribute
 
 _logger = logging.getLogger(__name__)
 
@@ -458,8 +459,8 @@ class Session(AbstractContextManager):
                         return ["=", "+"] if prefix.endswith(" ") else []
 
                 # If it parses successfully, add something so it will fail
-                self.parse(prefix + " @autocompletions@")
-                # self.parse(prefix + "@autocompletions@")
+                self.parse(prefix + "@autocompletions@")
+                # self.parse(prefix + " @autocompletions@")
             except KestrelSyntaxError as e:
                 _logger.debug("exception: %s", e)
                 varnames = self.get_variable_names()
@@ -490,16 +491,27 @@ class Session(AbstractContextManager):
                             # Check line for most recently mentioned variable
                             # do i need a separate function to do this?
                             # loop through? string if needed? idk
-                        _logger.debug("BEFORE attribute autocompletion: %s", tmp)
-                        if words[-2] in varnames:
-                            var_name = self.symtable[words[-2]]
-                            tmp.extend(get_entity_id_attribute(var_name))
-                            # harded coded for DISP var ATTR __ case. (FOR TESTING)
+                        _logger.debug("in attributes block")
+                        attr_var = ""
+                        # "function" checking for the last called variable
+                        # still unsure how to limit it to just the beginning of a statement
+                        # write this loop as 1-liner somehow? or separate func w/ included functionality (above)?
+                        for v in reversed(words):
+                            if v in varnames:
+                                attr_var = self.symtable[v]
+                                _logger.debug("varname: %s", v)
+                                break
+                        # tentative method to address whether the variable has been initialised in current session already
+                        if attr_var:
+                            _logger.debug("BEFORE attribute autocompletion: %s", tmp)
+                            _logger.debug(get_entity_id_attribute(attr_var))
+                            tmp.extend(get_entity_id_attribute(attr_var))
                             # the testing output is giving me "new" and "name"
                             # for the autofill options; should only show "name"
                             # why is "new" in this list?? maybe something remaining from prev. autocompletion?
-                            # why does autocompleting after 'ATTR ' result in an error??
-                        _logger.debug("AFTER attribute autocompletion: %s", tmp)
+                                # BUG REPORT FOR THIS??? Not parsing tokens correctly
+                                # Treating 'n' as complete attribute... unintended behavior.
+                            _logger.debug("AFTER attribute autocompletion: %s", tmp)
                     elif token.startswith("STIXPATTERNBODY"):
                         # TODO: figure out how to complete STIX patterns
                         continue
