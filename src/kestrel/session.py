@@ -85,7 +85,6 @@ from kestrel.utils import set_current_working_directory, resolve_path_in_kestrel
 from kestrel.config import load_config
 from kestrel.datasource import DataSourceManager
 from kestrel.analytics import AnalyticsManager
-from kestrel.codegen.relations import get_entity_id_attribute
 
 _logger = logging.getLogger(__name__)
 
@@ -405,27 +404,6 @@ class Session(AbstractContextManager):
                 allnames = []
                 _logger.debug("cannot find auto-complete interface")
 
-        # does this autocomplete need to be added? They mentioned specifically for attributes, not variables...
-        # nvm just ignore this stuff lol
-        # elif "DISP" in prefix:
-        #     # display entity list autocomplete from existing scope of variables
-        #     # also checking for if ATTR then list possible attributes from VarStruct thing
-        #     # symtable (dict) - maps kestrel var names to associated Kestrel internal data structure (VarStruct)
-        #     allnames = [
-        #         v for v in self.get_variable_names() if v.startswith(prefix)
-        #     ]
-        # elif "ATTR" in prefix:
-        #     #check if variable exists in session, then auto-complete all attributes the variable has
-        #     if last_word in self.get_variable_names()
-        #         allnames = [
-        #             get_variable(last_word)
-        #         ]
-        #         _logger.debug(f"auto-complete from variable attributes {last_word}: {allnames}")
-        #     else:
-        #         allnames = []
-        #         _logger.debug("cannot find auto-complete variable")
-        # 2 scenarios: existing kestrel variable (1) and not yet existing (2) [in session]
-        # don't forget to include syntax error cases
         # CASE 1:   DISP <var>  ATTR ___autocomplete_here___
             # lists all ATTR if no specs
             # kestrel cache to find existing variables VarStruct
@@ -484,34 +462,28 @@ class Session(AbstractContextManager):
                     elif token == "ATTRIBUTES":
                         # TODO: figure out the varname and get its attrs
                         # how to figure out what the variable name is??
-                            # Can we assume that words[1] would be the var in this case?
-                            # if words[1] in varnames:
-                                # var_name = self.symtable[words[1]]
-                                # tmp.extend(get_entity_id_attribute(var_name))
                             # Check line for most recently mentioned variable
                             # do i need a separate function to do this?
                             # loop through? string if needed? idk
-                        _logger.debug("in attributes block")
-                        attr_var = ""
                         # "function" checking for the last called variable
                         # still unsure how to limit it to just the beginning of a statement
                         # write this loop as 1-liner somehow? or separate func w/ included functionality (above)?
+                        attr_var = ""
                         for v in reversed(words):
                             if v in varnames:
                                 attr_var = self.symtable[v]
-                                _logger.debug("varname: %s", v)
                                 break
+                            # elif v in commands
+                            # also risk it takes in v from a comment line...
                         # tentative method to address whether the variable has been initialised in current session already
                         if attr_var:
-                            _logger.debug("BEFORE attribute autocompletion: %s", tmp)
-                            _logger.debug(get_entity_id_attribute(attr_var))
-                            tmp.extend(get_entity_id_attribute(attr_var))
-                            # the testing output is giving me "new" and "name"
+                            tmp.extend(self.store.columns(attr_var.entity_table))
+                            # yayyy it workssss! ('ATTR ')
+                            # the testing output is giving me "new" and "name" ('ATTR n')
                             # for the autofill options; should only show "name"
                             # why is "new" in this list?? maybe something remaining from prev. autocompletion?
                                 # BUG REPORT FOR THIS??? Not parsing tokens correctly
                                 # Treating 'n' as complete attribute... unintended behavior.
-                            _logger.debug("AFTER attribute autocompletion: %s", tmp)
                     elif token.startswith("STIXPATTERNBODY"):
                         # TODO: figure out how to complete STIX patterns
                         continue
