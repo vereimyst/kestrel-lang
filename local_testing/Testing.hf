@@ -1,7 +1,9 @@
 conns = GET network-traffic
        FROM file:///home/myst/kestrel-lang/tests/test_bundle.json
        where [network-traffic:dst_port < 10000]
-DISP conns
+
+DISP c
+
 
 # create four process entities in Kestrel and store them in the variable `proclist`
 proclist = NEW process [ {"name": "cmd.exe", "pid": "123"}
@@ -18,5 +20,3 @@ DISP browsers ATTR n
 
 firefox = GET process FROM browsers WHERE [process:pid = '201']
 DISP firefox ATTR name, pid
-
-

@@ -1,0 +1,69 @@
+# correct attribute autocompletion debug log
+
+16:18:53 DEBUG kestrel.session code="# display the information (attributes name, pid) of the entities in variable `browsers`
+DISP browsers ATTR " prefix="# display the information (attributes name, pid) of the entities in variable `browsers`
+DISP browsers ATTR " last_word=""
+16:18:53 DEBUG kestrel.session standard auto-complete
+16:18:53 DEBUG kestrel.session 6A123456
+16:18:53 DEBUG kestrel.session exception: [ERROR] KestrelSyntaxError: invalid token "" at line 2 column 15, expects "ATTRIBUTES"
+rewrite the failed statement.
+16:18:53 DEBUG kestrel.session keywords: {'avg', 'desc', 'nunique', 'accepted', 'LAST', 'WHERE', 'ASC', 'null', 'join', 'last', 'group', 'asc', 'loaded', 'ACCEPTED', 'DISP', 'created', 'GET', 'count', 'or', 'START', 'new', 'MIN', 'COUNT', 'OR', 'LOAD', 'bin', 'AS', 'where', 'start', 'by', 'sort', 'BIN', 'WITH', 'TO', 'BY', 'FIND', 'get', 'NUNIQUE', 'limit', 'find', 'CONTAINED', 'sum', 'stop', 'apply', 'LOADED', 'JOIN', 'SAVE', 'OFFSET', 'contained', 'max', 'attr', 'as', 'to', 'SUM', 'timestamped', 'ATTR', 'MAX', 'FROM', 'save', 'and', 'min', 'TIMESTAMPED', 'LINKED', 'NEW', 'OWNED', 'info', 'disp', 'from', 'AND', 'load', 'LIMIT', 'with', 'INFO', 'on', 'owned', 'ON', 'APPLY', 'CREATED', 'SORT', 'NULL', 'offset', 'linked', 'DESC', 'STOP', 'AVG', 'GROUP'}
+16:18:53 DEBUG kestrel.session token: ATTRIBUTES
+16:18:53 DEBUG kestrel.session varname: browsers
+16:18:53 DEBUG firepit.sqlitestorage Executing query: PRAGMA table_info("browsers")
+16:18:53 DEBUG firepit.sqlitestorage browsers columns = ['name', 'pid', 'id']
+16:18:53 DEBUG kestrel.session ['id', 'name', 'pid'] -> ['id', 'name', 'pid']
+
+
+# variable partial autocompletion debug log
+
+17:35:50 DEBUG kestrel.session code="DISP c" prefix="DISP c" last_word="c"
+17:35:50 DEBUG kestrel.session standard auto-complete
+17:35:51 DEBUG kestrel.session first parse: [{'command': 'disp', 'input': 'c', 'transform': None, 'attrs': '*'}]
+17:35:51 DEBUG kestrel.session exception: [ERROR] KestrelSyntaxError: invalid character "@" at line 1 column 7, expects one of ['GET', 'FIND', 'SAVE', 'LIMIT', 'TRANSFORM', 'NEW', 'WHERE', 'GROUP', 'LOAD', 'SORT', 'VARIABLE', 'JOIN', 'DISP', 'APPLY', 'ATTR', 'INFO', 'OFFSET']
+rewrite the failed statement.
+17:35:51 DEBUG kestrel.session keywords: {'asc', 'join', 'linked', 'loaded', 'NEW', 'LOADED', 'group', 'BY', 'owned', 'as', 'limit', 'find', 'OFFSET', 'disp', 'apply', 'OR', 'where', 'bin', 'SUM', 'DESC', 'get', 'info', 'INFO', 'GET', 'TO', 'null', 'GROUP', 'LOAD', 'ON', 'APPLY', 'OWNED', 'last', 'load', 'from', 'WITH', 'count', 'ASC', 'COUNT', 'ATTR', 'stop', 'on', 'AND', 'sum', 'LIMIT', 'with', 'STOP', 'accepted', 'save', 'start', 'AVG', 'START', 'min', 'NUNIQUE', 'max', 'FIND', 'desc', 'BIN', 'by', 'WHERE', 'NULL', 'timestamped', 'FROM', 'and', 'offset', 'LINKED', 'ACCEPTED', 'nunique', 'sort', 'to', 'SORT', 'MIN', 'LAST', 'new', 'CONTAINED', 'avg', 'created', 'SAVE', 'TIMESTAMPED', 'MAX', 'JOIN', 'attr', 'DISP', 'or', 'contained', 'AS', 'CREATED'}
+17:35:51 DEBUG kestrel.session token: GET
+17:35:51 DEBUG kestrel.session token: FIND
+17:35:51 DEBUG kestrel.session token: SAVE
+17:35:51 DEBUG kestrel.session token: LIMIT
+17:35:51 DEBUG kestrel.session token: TRANSFORM
+17:35:51 DEBUG kestrel.session token: NEW
+17:35:51 DEBUG kestrel.session token: WHERE
+17:35:51 DEBUG kestrel.session token: GROUP
+17:35:51 DEBUG kestrel.session token: LOAD
+17:35:51 DEBUG kestrel.session token: SORT
+17:35:51 DEBUG kestrel.session token: VARIABLE
+17:35:51 DEBUG kestrel.session token: JOIN
+17:35:51 DEBUG kestrel.session token: DISP
+17:35:51 DEBUG kestrel.session token: APPLY
+17:35:51 DEBUG kestrel.session token: ATTR
+17:35:51 DEBUG kestrel.session token: INFO
+17:35:51 DEBUG kestrel.session token: OFFSET
+17:35:51 DEBUG kestrel.session ['TIMESTAMPED', '_', 'apply', 'attr', 'conns', 'disp', 'find', 'get', 'group', 'info', 'join', 'limit', 'load', 'new', 'offset', 'save', 'sort', 'where'] -> ['onns']
+
+
+# variable attribute partial autocompletion debug log
+
+17:39:38 DEBUG kestrel.session code="DISP conns ATTR p" prefix="DISP conns ATTR p" last_word="p"
+17:39:38 DEBUG kestrel.session standard auto-complete
+17:39:39 DEBUG kestrel.session first parse: [{'command': 'disp', 'input': 'conns', 'transform': None, 'attrs': 'p'}]
+17:39:39 DEBUG kestrel.session exception: [ERROR] KestrelSyntaxError: invalid character "@" at line 1 column 18, expects one of ['GET', 'FIND', 'SAVE', 'LIMIT', 'TRANSFORM', 'NEW', 'GROUP', 'JOIN', 'LOAD', 'VARIABLE', 'SORT', 'DISP', 'APPLY', 'INFO', 'OFFSET']
+rewrite the failed statement.
+17:39:39 DEBUG kestrel.session keywords: {'asc', 'join', 'linked', 'loaded', 'NEW', 'LOADED', 'group', 'BY', 'owned', 'as', 'limit', 'find', 'OFFSET', 'disp', 'apply', 'OR', 'where', 'bin', 'SUM', 'DESC', 'get', 'info', 'INFO', 'GET', 'TO', 'null', 'GROUP', 'LOAD', 'ON', 'APPLY', 'OWNED', 'last', 'load', 'from', 'WITH', 'count', 'ASC', 'COUNT', 'ATTR', 'stop', 'on', 'AND', 'sum', 'LIMIT', 'with', 'STOP', 'accepted', 'save', 'start', 'AVG', 'START', 'min', 'NUNIQUE', 'max', 'FIND', 'desc', 'BIN', 'by', 'WHERE', 'NULL', 'timestamped', 'FROM', 'and', 'offset', 'LINKED', 'ACCEPTED', 'nunique', 'sort', 'to', 'SORT', 'MIN', 'LAST', 'new', 'CONTAINED', 'avg', 'created', 'SAVE', 'TIMESTAMPED', 'MAX', 'JOIN', 'attr', 'DISP', 'or', 'contained', 'AS', 'CREATED'}
+17:39:39 DEBUG kestrel.session token: GET
+17:39:39 DEBUG kestrel.session token: FIND
+17:39:39 DEBUG kestrel.session token: SAVE
+17:39:39 DEBUG kestrel.session token: LIMIT
+17:39:39 DEBUG kestrel.session token: TRANSFORM
+17:39:39 DEBUG kestrel.session token: NEW
+17:39:39 DEBUG kestrel.session token: GROUP
+17:39:39 DEBUG kestrel.session token: JOIN
+17:39:39 DEBUG kestrel.session token: LOAD
+17:39:39 DEBUG kestrel.session token: VARIABLE
+17:39:39 DEBUG kestrel.session token: SORT
+17:39:39 DEBUG kestrel.session token: DISP
+17:39:39 DEBUG kestrel.session token: APPLY
+17:39:39 DEBUG kestrel.session token: INFO
+17:39:39 DEBUG kestrel.session token: OFFSET
+17:39:39 DEBUG kestrel.session ['TIMESTAMPED', '_', 'apply', 'conns', 'disp', 'find', 'get', 'group', 'info', 'join', 'limit', 'load', 'new', 'offset', 'save', 'sort'] -> []
