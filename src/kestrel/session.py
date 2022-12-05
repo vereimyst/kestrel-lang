@@ -406,7 +406,17 @@ class Session(AbstractContextManager):
             _logger.debug("standard auto-complete")
 
             try:
-                stmt = self.parse(prefix)
+                # could try different type of parsing disregarding last term and autocomplete for field in general using it as prefix...
+                # somehow take out the last term (from cursor_pos to last space) if last term is a space then just parse as is
+                # double parsing isn't necessarily less efficient (actually pulling the data is what takes time)
+                # current issue is it considers partial fields as complete
+                # thus they search for autocompletions for the following field while keeping partial field as prefix
+                # goal (atm): revamp parsing to always check for autocompletions for current field by removing current term from parsing
+                new_prefix = prefix[:len(last_word) + 1] # until the last space somehow
+                # thus the statement will always be considered "incomplete"
+                # still use last_word as prefix after searching for terms that would satsify current field to filter down results
+                # should prevent functions from showing up as suggestions in case of variable autocompletion
+                stmt = self.parse(new_prefix)
                 _logger.debug("first parse: %s", stmt)
                 last_stmt = stmt[-1]
                 if last_stmt["command"] == "assign" and last_stmt["output"] == "_":
